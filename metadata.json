@@ -1,0 +1,5 @@
+{
+  "name": "SalesEase Invoice Generator",
+  "description": "A simple and intuitive web application for quickly creating, managing, and exporting professional sales invoices as PDFs. Designed for small businesses and freelancers.",
+  "requestFramePermissions": []
+}
