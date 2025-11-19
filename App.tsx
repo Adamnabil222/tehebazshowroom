@@ -18,21 +18,21 @@ const initialInvoice: Invoice = {
   invoiceDate: getTodayDate(),
   dueDate: getTodayDate(),
   items: [{ id: crypto.randomUUID(), name: 'خدمات تصميم الويب', quantity: 1, price: 1500 }],
-  notes: 'شكراً لتعاملكم معنا!',
+  notes: 'يرجى تحويل المبلغ خلال 14 يوم من تاريخ الاستحقاق.',
   discountRate: 0,
 };
 
 const initialBusinessInfo: BusinessInfo = {
-  name: 'شركتك ذ.م.م',
-  address: '123 الشارع الرئيسي, أي مدينة, الولايات المتحدة 12345',
-  email: 'contact@yourcompany.com',
-  phone: '(555) 123-4567'
+  name: 'شركتك التقنية',
+  address: 'الرياض، المملكة العربية السعودية',
+  email: 'billing@techcompany.com',
+  phone: '+966 55 123 4567'
 };
 
 const initialClientInfo: ClientInfo = {
-  name: 'شركة العميل',
-  address: '456 شارع أوك, مدينة ما, الولايات المتحدة 54321',
-  email: 'contact@clientco.com'
+  name: 'مؤسسة العميل المتميز',
+  address: 'جدة، المملكة العربية السعودية',
+  email: 'accounts@client.com'
 };
 
 function App() {
@@ -80,28 +80,39 @@ function App() {
     return { subtotal, discountAmount, total };
   }, [invoice.items, invoice.discountRate]);
   
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!invoicePreviewRef.current) return;
     setIsExporting(true);
-    const element = invoicePreviewRef.current;
     
-    // Temporarily increase scale for better quality
-    element.style.transform = 'scale(1.5)';
-    element.style.transformOrigin = 'top left';
+    const element = invoicePreviewRef.current;
 
+    // Options for html2pdf
     const opt = {
-      margin: 0.5,
+      margin: 0,
       filename: `فاتورة-${invoice.invoiceNumber}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true,
+        scrollY: 0,
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).html2pdf().set(opt).from(element).save().then(() => {
-      element.style.transform = 'scale(1)';
+    try {
+      // @ts-ignore
+      if (window.html2pdf) {
+         // @ts-ignore
+         await window.html2pdf().set(opt).from(element).save();
+      } else {
+        alert("مكتبة PDF غير محملة بشكل صحيح. يرجى تحديث الصفحة.");
+      }
+    } catch (error) {
+      console.error("فشل تصدير PDF:", error);
+      alert("حدث خطأ غير متوقع أثناء إنشاء ملف PDF. يرجى المحاولة مرة أخرى.");
+    } finally {
       setIsExporting(false);
-    });
+    }
   };
 
   const handleShareWhatsApp = () => {
@@ -138,32 +149,59 @@ ${invoice.notes || 'شكراً لتعاملكم معنا.'}
       .replace(/^\s+/gm, '');
 
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+    const url = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    window.open(url, '_blank');
   };
 
   return (
-    <div className="min-h-screen bg-slate-100/50 font-sans text-slate-800">
-      <main className="container mx-auto px-4 py-8 md:py-12">
-        <header className="text-center mb-8 md:mb-12">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900">SalesEase</h1>
-            <p className="text-slate-500 mt-2 text-lg">أنشئ فواتير احترافية في ثوانٍ</p>
-        </header>
+    <div className="flex h-screen w-full overflow-hidden bg-slate-100 font-sans text-slate-800">
+      
+      {/* Sidebar Editor (Scrollable) */}
+      <aside className="w-full md:w-[450px] lg:w-[500px] bg-white border-l border-slate-200 flex flex-col shadow-2xl z-20 h-full">
+        
+        <div className="p-5 border-b border-slate-100 bg-white z-10 flex justify-between items-center">
+           <h1 className="text-2xl font-extrabold text-indigo-600 tracking-tight">SalesEase</h1>
+           <span className="text-xs font-medium px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full">محرر الفواتير</span>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          <InvoiceForm
-            invoice={invoice}
-            setInvoice={setInvoice}
-            businessInfo={businessInfo}
-            setBusinessInfo={setBusinessInfo}
-            clientInfo={clientInfo}
-            setClientInfo={setClientInfo}
-            addItem={addItem}
-            updateItem={updateItem}
-            removeItem={removeItem}
-            clearInvoice={clearInvoice}
-          />
-          <div className="lg:sticky lg:top-8">
-            <div ref={invoicePreviewRef}>
+        <div className="flex-1 overflow-y-auto p-5 bg-white">
+             <InvoiceForm
+              invoice={invoice}
+              setInvoice={setInvoice}
+              businessInfo={businessInfo}
+              setBusinessInfo={setBusinessInfo}
+              clientInfo={clientInfo}
+              setClientInfo={setClientInfo}
+              addItem={addItem}
+              updateItem={updateItem}
+              removeItem={removeItem}
+              clearInvoice={clearInvoice}
+            />
+        </div>
+
+        <div className="p-5 border-t border-slate-100 bg-slate-50 space-y-3 z-10">
+            <button
+              onClick={handleExportPDF}
+              disabled={isExporting}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:bg-indigo-300 disabled:cursor-not-allowed"
+            >
+              <DownloadIcon className="w-5 h-5"/>
+              {isExporting ? 'جاري المعالجة...' : 'تصدير الفاتورة (PDF)'}
+            </button>
+            <button
+              onClick={handleShareWhatsApp}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-white text-green-600 border border-green-200 font-bold rounded-lg hover:bg-green-50 focus:outline-none transition-all"
+            >
+              <WhatsAppIcon className="w-5 h-5"/>
+              إرسال واتساب
+            </button>
+        </div>
+      </aside>
+
+      {/* Main Preview Area (Full Screen, Scrollable) */}
+      <main className="flex-1 relative bg-slate-200/80 overflow-y-auto p-8 md:p-12 flex justify-center items-start">
+         <div className="w-fit mx-auto drop-shadow-2xl my-auto">
+            <div ref={invoicePreviewRef} className="min-w-[210mm]">
               <InvoicePreview
                   invoice={invoice}
                   businessInfo={businessInfo}
@@ -173,29 +211,14 @@ ${invoice.notes || 'شكراً لتعاملكم معنا.'}
                   total={total}
               />
             </div>
-             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button
-                  onClick={handleExportPDF}
-                  disabled={isExporting}
-                  className="w-full max-w-xs flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:bg-indigo-300"
-                >
-                  <DownloadIcon className="w-5 h-5"/>
-                  {isExporting ? 'جاري التصدير...' : 'تصدير كـ PDF'}
-                </button>
-                <button
-                  onClick={handleShareWhatsApp}
-                  className="w-full max-w-xs flex items-center justify-center gap-3 px-6 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400 transition-all"
-                >
-                  <WhatsAppIcon className="w-6 h-6"/>
-                  مشاركة عبر واتساب
-                </button>
-            </div>
-          </div>
-        </div>
+         </div>
+         
+         {/* Footer for large screen attribution */}
+         <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none mix-blend-multiply">
+             <p className="text-slate-400 text-sm opacity-60">معاينة مباشرة للفاتورة</p>
+         </div>
       </main>
-      <footer className="text-center py-6 text-slate-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} SalesEase. صُمم للبساطة والكفاءة.</p>
-      </footer>
+
     </div>
   );
 }

@@ -20,96 +20,130 @@ export const InvoicePreview: React.FC<InvoicePreviewProps> = ({
   total
 }) => {
   return (
-    <div className="bg-white p-8 md:p-12 rounded-2xl shadow-lg w-full max-w-4xl mx-auto my-auto border">
-      <header className="flex justify-between items-start pb-8 border-b-2 border-slate-100">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">فاتورة</h1>
-          <p className="text-slate-500 mt-1">فاتورة رقم: {invoice.invoiceNumber || 'INV-001'}</p>
-        </div>
-        <div className="text-indigo-600">
-            <CompanyLogoIcon className="w-24 h-24" />
-        </div>
-      </header>
+    // Removed 'overflow-hidden' and 'style={{ aspectRatio... }}' to allow full content expansion
+    <div className="bg-white w-full max-w-[210mm] mx-auto shadow-2xl text-slate-800 relative flex flex-col min-h-[297mm]">
+      
+      {/* Decorative Top Bar */}
+      <div className="h-3 w-full bg-indigo-600"></div>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">الفاتورة من</h2>
-          <p className="font-bold text-slate-700">{businessInfo.name || 'شركتك'}</p>
-          <p className="text-slate-600">{businessInfo.address || '123 شارع الأعمال، المدينة'}</p>
-          <p className="text-slate-600">{businessInfo.email || 'company@email.com'}</p>
-          <p className="text-slate-600">{businessInfo.phone || '(123) 456-7890'}</p>
-        </div>
-        <div>
-          <p className="font-bold text-slate-700">{clientInfo.name || 'اسم العميل'}</p>
-          <p className="text-slate-600">{clientInfo.address || '456 شارع العميل، المدينة'}</p>
-          <p className="text-slate-600">{clientInfo.email || 'client@email.com'}</p>
-        </div>
-      </section>
+      <div className="p-12 flex-grow">
+        {/* Header Section */}
+        <header className="flex justify-between items-start mb-12">
+          <div className="flex flex-col items-start">
+             <div className="text-indigo-600 mb-4">
+                <CompanyLogoIcon className="w-20 h-20" />
+             </div>
+             <h2 className="font-bold text-2xl text-slate-800">{businessInfo.name || 'اسم الشركة'}</h2>
+             <div className="text-sm text-slate-500 mt-2 space-y-1">
+               <p>{businessInfo.address || 'عنوان الشركة'}</p>
+               <p>{businessInfo.email || 'email@company.com'}</p>
+               <p>{businessInfo.phone || '000-000-0000'}</p>
+             </div>
+          </div>
+          
+          <div className="text-end">
+            <h1 className="text-5xl font-extrabold text-indigo-600 select-none">
+              فاتورة
+            </h1>
+            <div className="mt-6 bg-slate-50 p-4 rounded-lg border border-slate-100 min-w-[200px]">
+                <div className="mb-2">
+                    <span className="block text-xs font-bold text-indigo-600">رقم الفاتورة</span>
+                    <span className="font-mono text-lg font-bold text-slate-800">#{invoice.invoiceNumber || '000'}</span>
+                </div>
+                <div className="mb-2">
+                    <span className="block text-xs font-bold text-indigo-600">التاريخ</span>
+                    <span className="text-sm font-medium text-slate-700">{invoice.invoiceDate || '-'}</span>
+                </div>
+                <div>
+                    <span className="block text-xs font-bold text-red-500">تاريخ الاستحقاق</span>
+                    <span className="text-sm font-medium text-slate-700">{invoice.dueDate || '-'}</span>
+                </div>
+            </div>
+          </div>
+        </header>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
-        <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">تاريخ الفاتورة</h2>
-            <p className="font-bold text-slate-700">{invoice.invoiceDate || new Date().toLocaleDateString()}</p>
-        </div>
-        <div>
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">تاريخ الاستحقاق</h2>
-            <p className="font-bold text-slate-700">{invoice.dueDate || new Date().toLocaleDateString()}</p>
-        </div>
-      </section>
+        {/* Client Info Section */}
+        <section className="mb-12">
+           <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+              <h3 className="text-xs font-bold text-slate-400 mb-3">فاتورة إلى</h3>
+              <div className="flex flex-col space-y-1">
+                  <span className="text-xl font-bold text-slate-800">{clientInfo.name || 'اسم العميل'}</span>
+                  <span className="text-slate-600">{clientInfo.address || 'عنوان العميل'}</span>
+                  <span className="text-indigo-600 font-medium text-sm">{clientInfo.email || 'client@email.com'}</span>
+              </div>
+           </div>
+        </section>
 
-      <section className="mt-8">
-        <table className="w-full text-start">
-          <thead>
-            <tr className="bg-slate-50 text-slate-600 text-sm uppercase">
-              <th className="p-3 font-semibold rounded-s-lg">البند</th>
-              <th className="p-3 font-semibold text-center">الكمية</th>
-              <th className="p-3 font-semibold text-end">السعر</th>
-              <th className="p-3 font-semibold text-end rounded-e-lg">الإجمالي</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.items.map(item => (
-              <tr key={item.id} className="border-b border-slate-100">
-                <td className="p-3 font-medium text-slate-800">{item.name || 'وصف البند'}</td>
-                <td className="p-3 text-slate-600 text-center">{item.quantity}</td>
-                <td className="p-3 text-slate-600 text-end">ج.م {item.price.toFixed(2)}</td>
-                <td className="p-3 text-slate-800 font-medium text-end">ج.م {(item.quantity * item.price).toFixed(2)}</td>
+        {/* Items Table */}
+        <section className="mb-10">
+          <table className="w-full text-start">
+            <thead>
+              <tr className="border-b-2 border-indigo-100">
+                <th className="py-3 text-start text-xs font-bold text-indigo-900 w-1/2">الوصف</th>
+                <th className="py-3 text-center text-xs font-bold text-indigo-900">الكمية</th>
+                <th className="py-3 text-end text-xs font-bold text-indigo-900">السعر</th>
+                <th className="py-3 text-end text-xs font-bold text-indigo-900">الإجمالي</th>
               </tr>
-            ))}
-            {invoice.items.length === 0 && (
-                 <tr className="border-b border-slate-100">
-                    <td className="p-3 font-medium text-slate-400 italic">لا توجد بنود بعد...</td>
-                    <td className="p-3 text-slate-400 text-center">0</td>
-                    <td className="p-3 text-slate-400 text-end">ج.م 0.00</td>
-                    <td className="p-3 text-slate-400 font-medium text-end">ج.م 0.00</td>
-                 </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {invoice.items.map((item) => (
+                <tr key={item.id}>
+                  <td className="py-4 text-slate-700 font-medium">{item.name || 'بند بدون اسم'}</td>
+                  <td className="py-4 text-center text-slate-600">{item.quantity}</td>
+                  <td className="py-4 text-end text-slate-600 font-mono">ج.م {item.price.toFixed(2)}</td>
+                  <td className="py-4 text-end text-slate-800 font-bold font-mono">ج.م {(item.quantity * item.price).toFixed(2)}</td>
+                </tr>
+              ))}
+              {invoice.items.length === 0 && (
+                  <tr>
+                      <td colSpan={4} className="py-8 text-center text-slate-400 italic bg-slate-50/50 rounded-b-lg">لا توجد بنود مضافة حالياً</td>
+                  </tr>
+              )}
+            </tbody>
+          </table>
+        </section>
 
-      <section className="flex justify-end mt-8">
-        <div className="w-full max-w-xs space-y-3">
-          <div className="flex justify-between text-slate-600">
-            <span>المجموع الفرعي</span>
-            <span>ج.م {subtotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-slate-600">
-            <span>الخصم ({invoice.discountRate}%)</span>
-            <span className="text-green-600">-ج.م {discountAmount.toFixed(2)}</span>
-          </div>
-          <div className="border-t border-slate-200 my-2"></div>
-          <div className="flex justify-between font-bold text-slate-800 text-lg">
-            <span>المجموع الإجمالي</span>
-            <span>ج.م {total.toFixed(2)}</span>
-          </div>
-        </div>
-      </section>
+        {/* Totals Section */}
+        <section className="flex justify-end mb-12">
+           <div className="w-full max-w-sm bg-slate-50 rounded-xl p-6 border border-slate-100 space-y-3">
+              <div className="flex justify-between items-center text-slate-600">
+                  <span className="font-medium">المجموع الفرعي</span>
+                  <span className="font-mono">ج.م {subtotal.toFixed(2)}</span>
+              </div>
+              
+              {invoice.discountRate > 0 && (
+                <div className="flex justify-between items-center text-green-600">
+                    <span className="font-medium text-sm">خصم ({invoice.discountRate}%)</span>
+                    <span className="font-mono text-sm">- ج.م {discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              
+              <div className="border-t border-slate-200 pt-3 mt-3">
+                  <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-slate-800">الإجمالي المستحق</span>
+                      <span className="text-2xl font-bold text-indigo-600 font-mono">ج.م {total.toFixed(2)}</span>
+                  </div>
+              </div>
+           </div>
+        </section>
 
-      <footer className="mt-12">
-        <h3 className="text-lg font-semibold text-slate-700">ملاحظات</h3>
-        <p className="text-slate-500 mt-2 text-sm">{invoice.notes || 'شكراً لتعاملكم معنا.'}</p>
+        {/* Notes Section */}
+        {(invoice.notes) && (
+            <section className="mb-8 border-t border-slate-100 pt-6">
+                <h4 className="text-xs font-bold text-slate-400 mb-2">ملاحظات وشروط</h4>
+                <p className="text-sm text-slate-600 leading-relaxed">{invoice.notes}</p>
+            </section>
+        )}
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-slate-50 border-t border-slate-200 p-8 text-center mt-auto">
+          <p className="text-indigo-600 font-bold mb-1 text-lg">شكراً لتعاملكم معنا</p>
+          <p className="text-slate-400 text-xs">تم إنشاء هذه الفاتورة بواسطة Absoft</p>
       </footer>
+      
+      {/* Decorative Bottom Bar */}
+      <div className="h-2 w-full bg-indigo-600"></div>
     </div>
   );
 };
